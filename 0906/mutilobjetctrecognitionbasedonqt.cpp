@@ -319,7 +319,6 @@ void MutilObjetctRecognitionBasedOnQt::mouseReleaseEvent(QMouseEvent *e)
 		if (m_icurrentRoi_Width > 0 && m_icurrentRoi_Height > 0 && m_AreaSum > 100 &&m_AreaSum<30000 )
 		{
 			sprintf(m_charDstImgName, m_strDstImg, m_iCurrentImgId);
-			imwrite(m_charDstImgName, m_matCurrentImg);
 			objectRecognition.upDateNewData(m_charDstImgName, m_icurrentRoi_X, m_icurrentRoi_Y, m_icurrentRoi_Width, m_icurrentRoi_Height, m_iCurrentImgId);
 			
 			//QMessageBox::information(this, QString::fromLocal8Bit("友情提示"), QString::fromLocal8Bit("模板添加成功"));
