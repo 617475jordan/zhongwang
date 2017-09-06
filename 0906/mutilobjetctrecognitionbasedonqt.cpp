@@ -170,17 +170,18 @@ void MutilObjetctRecognitionBasedOnQt::on_minScoreOkButton_clicked()
 
 void MutilObjetctRecognitionBasedOnQt::on_maxOverLapOkButton_clicked()
 {
-	QString 	m_qStr;
-	m_qStr = ui.maxOverLaplineEdit->text();
-	double m_dMaxOverLap = m_qStr.toDouble();
+	QString 	m_qstr;
+	m_qstr = ui.maxOverLaplineEdit->text();
+	double m_dMaxOverLap = m_qstr.toDouble();
 	if (m_dMaxOverLap > 1 || m_dMaxOverLap < 0)
 	{
 		m_dMaxOverLap = 0.15;
 	}
 
-	QString m_qstr = QString("%1").arg(m_dMaxOverLap);
+	m_qstr = QString("%1").arg(m_dMaxOverLap);
 	ui.maxOverLaplineEdit->setText(m_qstr);
 	objectRecognition.updateMaxOverLap(m_dMaxOverLap);
+	m_qstr.clear();
 }
 
 void MutilObjetctRecognitionBasedOnQt::on_clearButton_clicked()
@@ -194,20 +195,29 @@ void MutilObjetctRecognitionBasedOnQt::on_clearButton_clicked()
 		ui.minScorelineEdit->setText(m_qstr);
 		m_qstr = QString("%1").arg(m_dInitialMinScore);
 		ui.maxOverLaplineEdit->setText(m_qstr);
+		m_qstr.clear();
 	}
 	
 }
 
-void MutilObjetctRecognitionBasedOnQt::on_inputModelButton_clicked()
+void MutilObjetctRecognitionBasedOnQt::on_loadModelButton_clicked()
 {
 	QString m_qstrFilename = QFileDialog::getOpenFileName(this,
 		tr("Open Model"), ".", tr("Image File (*.shm)"));
 	QTextCodec *code = QTextCodec::codecForName("gb18030");
 	std::string m_loadModelName = code->fromUnicode(m_qstrFilename).data();//filename.toAscii().data()
-	if (objectRecognition.loadModel(m_loadModelName))
+	if (m_loadModelName.size() > 0)
 	{
-		QMessageBox::information(this, QString::fromLocal8Bit("友情提示"), QString::fromLocal8Bit("模板导入成功"));
+		if (objectRecognition.loadModel(m_loadModelName))
+		{
+			QMessageBox::information(this, QString::fromLocal8Bit("友情提示"), QString::fromLocal8Bit("模板导入成功"));
+		}
 	}
+	else
+	{
+		QMessageBox::information(this, QString::fromLocal8Bit("友情提示"), QString::fromLocal8Bit("模板未导入成功"));
+	}
+	m_qstrFilename.clear();
 }
 
 void MutilObjetctRecognitionBasedOnQt::updateTime()
@@ -216,22 +226,24 @@ void MutilObjetctRecognitionBasedOnQt::updateTime()
 	strftime(m_charCurrentTime, sizeof(m_charCurrentTime), "%Y/%m/%d %X %A ", localtime(&m_currentTime));
 	QString m_qstr = QString(m_charCurrentTime);
 	ui.timeLabel->setText(m_qstr);
+	m_qstr.clear();
 }
 
 void MutilObjetctRecognitionBasedOnQt::on_screenShootButton_clicked()
 {
+	++m_iCurrentImgId;
 	m_matImg.copyTo(m_matCurrentImg);
-
 	m_tmpQImg = Mat2QImage(m_matCurrentImg);
 	ui.Image->setPixmap(QPixmap::fromImage(m_tmpQImg));  // 将图片显示到label上 
+	sprintf(m_charDstImg, m_strDstImg, m_iCurrentImgId);
+	imwrite(m_charDstImg, m_matCurrentImg);
+	
 }
 
 void MutilObjetctRecognitionBasedOnQt::mousePressEvent(QMouseEvent *e)
 {
 	if (m_bCap == true)
 	{
-		//----Qt5解决中文乱码  
-		//QTextCodec *codec = QTextCodec::codecForName("GB18030");
 		m_qPoint = ui.Image->mapFromGlobal(cursor().pos());
 		//----QMouseEvent类提供的x()和y()可获取鼠标相对窗口的位置  
 		QString str = "(" + QString::number(m_qPoint.x()) + ", " + QString::number(m_qPoint.y()) + ")";
@@ -255,6 +267,7 @@ void MutilObjetctRecognitionBasedOnQt::mousePressEvent(QMouseEvent *e)
 		{
 			//statusBar()->showMessage(codec->toUnicode("中键:") + str);
 		}
+		str.clear();
 	}
 	
 }
@@ -269,8 +282,8 @@ void MutilObjetctRecognitionBasedOnQt::mouseMoveEvent(QMouseEvent *e)
 		if (m_bDrawing&&mousePosition())
 		{
 			//----QMouseEvent类提供的x()和y()可获取鼠标相对窗口的位置  
-			QString str = "(" + QString::number(m_qPoint.x()) + ", " + QString::number(m_qPoint.y()) + ")";
-			statusBar()->showMessage(codec->toUnicode("鼠标位置:") + str, 3000);
+			QString m_qstr = "(" + QString::number(m_qPoint.x()) + ", " + QString::number(m_qPoint.y()) + ")";
+			statusBar()->showMessage(codec->toUnicode("鼠标位置:") + m_qstr, 3000);
 			//用MIN得到左上点作为矩形框的起始坐标，如果不加这个，画矩形时只能向一个方向进行  
 			m_recRectangle.x = m_pointOriginalPosition.x;
 			m_recRectangle.y = m_pointOriginalPosition.y;
@@ -285,7 +298,7 @@ void MutilObjetctRecognitionBasedOnQt::mouseMoveEvent(QMouseEvent *e)
 
 			m_capQImg = Mat2QImage(m_matTmpImg);
 			ui.Image->setPixmap(QPixmap::fromImage(m_capQImg));  // 将图片显示到label上
-
+			m_qstr.clear();
 		}
 	}
 	
@@ -305,11 +318,8 @@ void MutilObjetctRecognitionBasedOnQt::mouseReleaseEvent(QMouseEvent *e)
 		double m_AreaSum = m_icurrentRoi_Width*m_icurrentRoi_Height;
 		if (m_icurrentRoi_Width > 0 && m_icurrentRoi_Height > 0 && m_AreaSum > 100 &&m_AreaSum<30000 )
 		{
-			sprintf(m_charDstImg, m_strDstImg, m_iCurrentImgId);
-			imwrite(m_charDstImg, m_matTmpImg);
-			
 			objectRecognition.upDateNewData(m_charDstImg, m_icurrentRoi_X, m_icurrentRoi_Y, m_icurrentRoi_Width, m_icurrentRoi_Height, m_iCurrentImgId);
-			m_iCurrentImgId++;
+			
 			//QMessageBox::information(this, QString::fromLocal8Bit("友情提示"), QString::fromLocal8Bit("模板添加成功"));
 			QMessageBox message(QMessageBox::NoIcon, QString::fromLocal8Bit("友情提示"), QString::fromLocal8Bit("模板添加成功"), QMessageBox::Yes /*| QMessageBox::No,*/, NULL);
 			rectangle(m_matTmpImg, m_recRectangle, m_scalarColor, 1);  //画矩形框
@@ -391,7 +401,7 @@ void MutilObjetctRecognitionBasedOnQt::initialize()
 	m_fileStorage.open(m_strFileStorage, FileStorage::READ);
 	if (!m_fileStorage.isOpened())
 	{
-		m_iCurrentImgId = 1;
+		m_iCurrentImgId = 0;
 	}
 	else
 	{

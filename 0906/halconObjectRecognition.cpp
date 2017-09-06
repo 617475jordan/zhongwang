@@ -166,6 +166,13 @@ void halconObjectRecognition::updateMaxOverLap(double m_updateMaxOverLap)
 
 bool halconObjectRecognition::loadModel(string m_strModelPath)
 {
+	for (int i = 0; i < m_vecModelName.size(); i++)
+	{
+		if (m_strModelPath == m_vecModelName[i])
+		{
+			return false;
+		}
+	}
 	int m_iFirstSize = hv_vecModelID.size();
 	m_strModelPath.copy(m_charfileName, m_strModelPath.length());
 	m_vecModelName.push_back(m_charfileName);

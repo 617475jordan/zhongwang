@@ -42,7 +42,7 @@ private:
 	char                       m_charRemove[100];
 	bool                       m_bDrawing;
 	int                        m_icurrentRoi_X, m_icurrentRoi_Y, m_icurrentRoi_Width, m_icurrentRoi_Height;
-	int                        m_iCurrentImgId = 1;
+	int                        m_iCurrentImgId = 0;
 	Mat                        roi;//ROIÍ¼Ïñ
 	Mat                        m_matCurrentImg;
 	bool                       m_bCap=false;
@@ -70,7 +70,7 @@ void on_removeButton_clicked();
 void on_minScoreOkButton_clicked();
 void on_maxOverLapOkButton_clicked();
 void on_clearButton_clicked();
-void on_inputModelButton_clicked();
+void on_loadModelButton_clicked();
 void updateTime();
 void on_screenShootButton_clicked();
 protected:
