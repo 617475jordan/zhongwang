@@ -38,7 +38,7 @@ private:
 	Point                      m_pointOriginalPosition;//初始坐标   
 	Rect                       m_recRectangle;//标记ROI的矩形框
 	char                       m_charCurrrentPosition[100];
-	char                       m_charDstImg[100];
+	char                       m_charDstImgName[100];
 	char                       m_charRemove[100];
 	bool                       m_bDrawing;
 	int                        m_icurrentRoi_X, m_icurrentRoi_Y, m_icurrentRoi_Width, m_icurrentRoi_Height;

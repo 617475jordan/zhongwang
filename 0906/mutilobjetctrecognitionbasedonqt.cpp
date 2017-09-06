@@ -235,8 +235,8 @@ void MutilObjetctRecognitionBasedOnQt::on_screenShootButton_clicked()
 	m_matImg.copyTo(m_matCurrentImg);
 	m_tmpQImg = Mat2QImage(m_matCurrentImg);
 	ui.Image->setPixmap(QPixmap::fromImage(m_tmpQImg));  // 将图片显示到label上 
-	sprintf(m_charDstImg, m_strDstImg, m_iCurrentImgId);
-	imwrite(m_charDstImg, m_matCurrentImg);
+	sprintf(m_charDstImgName, m_strDstImg, m_iCurrentImgId);
+	imwrite(m_charDstImgName, m_matCurrentImg);
 	
 }
 
@@ -318,7 +318,9 @@ void MutilObjetctRecognitionBasedOnQt::mouseReleaseEvent(QMouseEvent *e)
 		double m_AreaSum = m_icurrentRoi_Width*m_icurrentRoi_Height;
 		if (m_icurrentRoi_Width > 0 && m_icurrentRoi_Height > 0 && m_AreaSum > 100 &&m_AreaSum<30000 )
 		{
-			objectRecognition.upDateNewData(m_charDstImg, m_icurrentRoi_X, m_icurrentRoi_Y, m_icurrentRoi_Width, m_icurrentRoi_Height, m_iCurrentImgId);
+			sprintf(m_charDstImgName, m_strDstImg, m_iCurrentImgId);
+			imwrite(m_charDstImgName, m_matCurrentImg);
+			objectRecognition.upDateNewData(m_charDstImgName, m_icurrentRoi_X, m_icurrentRoi_Y, m_icurrentRoi_Width, m_icurrentRoi_Height, m_iCurrentImgId);
 			
 			//QMessageBox::information(this, QString::fromLocal8Bit("友情提示"), QString::fromLocal8Bit("模板添加成功"));
 			QMessageBox message(QMessageBox::NoIcon, QString::fromLocal8Bit("友情提示"), QString::fromLocal8Bit("模板添加成功"), QMessageBox::Yes /*| QMessageBox::No,*/, NULL);

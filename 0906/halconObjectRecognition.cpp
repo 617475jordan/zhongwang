@@ -280,7 +280,7 @@ void halconObjectRecognition::setUpModel(char m_charFileName[100], int m_iCurren
 		sprintf(m_charFileName, m_strModelDst, m_iCurrentImgId);
 		WriteShapeModel(hv_ModelID, m_charFileName);
 	}
-	
+	 
 	//Sleep(2000);
 }
 
