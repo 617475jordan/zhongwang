@@ -32,14 +32,13 @@ Mat CBodyBasics::colorUpdate()
 	HRESULT hr = colorreader->AcquireLatestFrame(&frame);
 	Mat  src(height, width, CV_8UC4);      //注意：这里必须为4通道的图，Kinect的数据只能以Bgra格式传出
 	Mat  outImage(height, width, CV_8UC3);
-	Size m_size = Size(960, 540);
 	if (SUCCEEDED(hr))
 	{
 		frame->CopyConvertedFrameDataToArray(height*width * 4, reinterpret_cast<BYTE*>(src.data), ColorImageFormat::ColorImageFormat_Bgra);   //传出数据
 	}
 	SafeRelease(frame);
 	cvtColor(src, outImage, CV_RGBA2RGB);
-	resize(outImage, outImage, m_size);
+	resize(outImage, outImage, Size(height / 2, width / 4));
 	return outImage;
 }
 /// Initializes the default Kinect sensor
