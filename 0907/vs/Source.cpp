@@ -15,7 +15,7 @@ bool m_bDrawing;
 VideoCapture capture;
 halconObjectRecognition objectRecognition;
 int  m_icurrentRoi_X, m_icurrentRoi_Y, m_icurrentRoi_Width, m_icurrentRoi_Height;
-int m_iCurrentImgNum = 1;
+int m_iCurrentImgId = 0;
 
 #define m_strDstImg  "..\\dst\\%d.jpg"
 #define m_strSrcImg	 "..\\src\\current.jpg"
@@ -24,55 +24,57 @@ int m_iCurrentImgNum = 1;
 
 void initialize();
 void onMouse(int event, int x, int y, int flags, void *param);
+void kinect();
+int commonCap();
 
-//const Size m_size = Size(512,424);
-int main(int argc, char *argv[])
+void kinect()
 {
-#if defined(_WIN32)
-	SetSystem("use_window_thread", "true");
-#elif defined(__linux__)
-	XInitThreads();
-#endif
-	
-	objectRecognition.initialize();
-	
-	//Sleep(2000);
 	CBodyBasics myKinect;
 	remapImage 	remapImage;
 	matHalcon  matHalcon;
-	//HRESULT hr = myKinect.colorInitializeDefaultSensor();
-	//while (FAILED(hr))
-	//{
-	//	hr = myKinect.colorInitializeDefaultSensor();
-	//}
-	//namedWindow(windowsName);
-	//setMouseCallback(windowsName, onMouse);
-	//if (SUCCEEDED(hr))
-	//{
+	HRESULT hr = myKinect.colorInitializeDefaultSensor();
+	while (FAILED(hr))
+	{
+		hr = myKinect.colorInitializeDefaultSensor();
+	}
+	namedWindow(windowsName);
+	setMouseCallback(windowsName, onMouse);
+	if (SUCCEEDED(hr))
+	{
+		objectRecognition.initialize();
+		while (1)
+		{
+			int m_iTime = clock();
+			m_matImg = myKinect.colorUpdate();
+			if (m_matImg.empty())
+			{
+				m_matImg = myKinect.colorUpdate();
+			}
+			else
+			{
+				cvtColor(m_matImg, m_matImg, CV_RGB2GRAY);
+				cvtColor(m_matImg, m_matImg, CV_GRAY2RGB);
+				m_matTmpImg = Mat::zeros(m_matImg.rows, m_matImg.cols, m_matImg.type());
+				m_matImg = remapImage.Photo_Remap(m_matImg);
+				GaussianBlur(m_matImg, m_matImg, Size(3, 3), 0);
+				GaussianBlur(m_matImg, m_matImg, Size(3, 3), 0);
+				//resize(m_matImg, m_matImg, m_size);				
+				objectRecognition.run(matHalcon.IplImageToHImage(m_matImg),m_matImg);
+				imshow(windowsName, m_matImg);
+				waitKey(50);
+			}
+			cout << "The total time is :" << clock() - m_iTime << endl;
+		}
+	}
+}
 
-	//	while (1)
-	//	{
-	//		int m_iTime = clock();
-	//		m_matImg = myKinect.colorUpdate();
-	//		if (m_matImg.empty())
-	//		{
-	//			m_matImg = myKinect.colorUpdate();
-	//		}
-	//		else
-	//		{
-	//			cvtColor(m_matImg, m_matImg, CV_RGB2GRAY);
-	//			cvtColor(m_matImg, m_matImg, CV_GRAY2RGB);
-	//			m_matTmpImg = Mat::zeros(m_matImg.rows, m_matImg.cols, m_matImg.type());
-	//			m_matImg = remapImage.Photo_Remap(m_matImg);
-	//			cout << m_matImg.cols << "" << m_matImg.rows << endl;
-	//			//resize(m_matImg, m_matImg, m_size);				
-	//			objectRecognition.run(matHalcon.IplImageToHImage(m_matImg));
-	//			imshow(windowsName, m_matImg);
-	//			waitKey(50);
-	//		}
-	//		cout << "The total time is :" << clock() - m_iTime << endl;
-	//	}
-	//}
+
+
+int commonCap()
+{
+	remapImage 	remapImage;
+	matHalcon  matHalcon;
+	objectRecognition.initialize();
 	capture.open(0);
 	if (!capture.isOpened())
 	{
@@ -98,10 +100,10 @@ int main(int argc, char *argv[])
 				GaussianBlur(m_matImg, m_matImg, Size(3, 3), 0);
 				cvtColor(m_matImg, m_matImg, CV_RGB2GRAY);
 				cvtColor(m_matImg, m_matImg, CV_GRAY2RGB);
-				m_matImg=ImageEnhancement.SimplestCB(m_matImg, 1);
+				m_matImg = ImageEnhancement.SimplestCB(m_matImg, 1);
 				m_matTmpImg = Mat::zeros(m_matImg.rows, m_matImg.cols, m_matImg.type());
 				//resize(m_matImg, m_matImg, m_size);				
-				objectRecognition.run(matHalcon.IplImageToHImage(m_matImg));
+				objectRecognition.run(matHalcon.IplImageToHImage(m_matImg),m_matImg);
 				imshow(windowsName, m_matImg);
 				waitKey(1);
 			}
@@ -109,6 +111,12 @@ int main(int argc, char *argv[])
 		}
 
 	}
+}
+
+//const Size m_size = Size(512,424);
+int main(int argc, char *argv[])
+{
+	kinect();
 	return 0;
 }
 
@@ -178,11 +186,11 @@ void onMouse(int event, int x, int y, int flags, void *param)
 			/*namedWindow("SignROI", WINDOW_AUTOSIZE);
 			imshow("SignROI", roi);
 			waitKey(1);*/
-
-			sprintf(m_charDstImg, m_strDstImg, m_iCurrentImgNum);
+			m_iCurrentImgId++;
+			sprintf(m_charDstImg, m_strDstImg, m_iCurrentImgId);
 			imwrite(m_charDstImg, m_matCurrentImg);
-			objectRecognition.upDateNewData(m_charDstImg, m_icurrentRoi_X, m_icurrentRoi_Y, m_icurrentRoi_Width, m_icurrentRoi_Height);
-			m_iCurrentImgNum++;
+			objectRecognition.upDateNewData(m_charDstImg, m_icurrentRoi_X, m_icurrentRoi_Y, m_icurrentRoi_Width, m_icurrentRoi_Height, m_iCurrentImgId);
+			
 			
 		}
 
