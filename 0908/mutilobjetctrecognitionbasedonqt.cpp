@@ -100,6 +100,8 @@ void MutilObjetctRecognitionBasedOnQt::on_closeButton_clicked()
 		m_dCurrentFps = 0;
 		ui.minScorelineEdit->setText("0");
 		ui.maxOverLaplineEdit->setText("0");
+		ui.imageEnhanceComboBox->setCurrentText("Orignial");
+		ui.transformComboBox->setCurrentText("Orignial");
 	}
 	
 }
@@ -164,26 +166,20 @@ void MutilObjetctRecognitionBasedOnQt::on_loadModelButton_clicked()
 }
 void MutilObjetctRecognitionBasedOnQt::on_removeModelButton_clicked()
 {
-	QString m_qstrFilename = QFileDialog::getOpenFileName(this,
-		tr("Open Image"), ".", tr("Image File (*.shm)"));
-	QTextCodec *code = QTextCodec::codecForName("gb18030");
-	std::string m_strRemoveModelName = code->fromUnicode(m_qstrFilename).data();//filename.toAscii().data()  
-	if (m_strRemoveModelName.length() <= 0)
+	QString m_qstr = ui.modelComboBox->currentText();
+	String m_str = m_qstr.toStdString();
+
+	if (objectRecognition.removdeModel(m_str))
 	{
-		return;
+		QMessageBox::information(this, QString::fromLocal8Bit("友情提示"), QString::fromLocal8Bit("模板已删除"));
 	}
 	else
 	{
-		if (objectRecognition.removdeModel(m_strRemoveModelName))
-		{
-			QMessageBox::information(this, QString::fromLocal8Bit("友情提示"), QString::fromLocal8Bit("模板已删除"));
-		}
-		else
-		{
-			QMessageBox::information(this, QString::fromLocal8Bit("友情提示"), QString::fromLocal8Bit("模板未删除或不存在"));
-		}
+		QMessageBox::information(this, QString::fromLocal8Bit("友情提示"), QString::fromLocal8Bit("模板未删除或不存在"));
 	}
-	
+	m_qstr.clear();
+	m_str.clear();
+
 }
 
 void MutilObjetctRecognitionBasedOnQt::on_loadButton_clicked()
