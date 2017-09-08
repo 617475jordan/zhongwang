@@ -4,7 +4,10 @@ MutilObjetctRecognitionBasedOnQt::MutilObjetctRecognitionBasedOnQt(QWidget *pare
 	: QMainWindow(parent)
 {
 	ui.setupUi(this); 
+	ui.minScorelineEdit->setText("0");
+	ui.maxOverLaplineEdit->setText("0");
 	objectRecognition.initialize();
+
 	m_qTimer = new QTimer(this);
 	m_qCurrentTimer = new QTimer(this);
 	m_qCurrentTimer->start(33);
@@ -80,19 +83,58 @@ void MutilObjetctRecognitionBasedOnQt::on_openButton_clicked()
 
 void MutilObjetctRecognitionBasedOnQt::on_closeButton_clicked()
 {
-	m_bDrawing = false;
-	m_qTimer->stop();
-	m_matImg.release();
-	ui.Cap->clear();
-	ui.Image->clear();
-	m_vecStrExistence.clear();
-	m_capture.release();
-	m_bCap = false;
-	objectRecognition.clear();
-	m_dCurrentFps = 0;
+	if (m_bCap == true)
+	{
+		m_bDrawing = false;
+		m_qTimer->stop();
+		m_matImg.release();
+		ui.Cap->clear();
+		ui.Image->clear();
+		m_vecStrExistence.clear();
+		m_capture.release();
+		m_bCap = false;
+		objectRecognition.clear();
+		m_dCurrentFps = 0;
+		ui.minScorelineEdit->setText("0");
+		ui.maxOverLaplineEdit->setText("0");
+	}
+	
 }
 
 
+void MutilObjetctRecognitionBasedOnQt::on_clearButton_clicked()
+{
+	if (m_bCap == true)
+	{
+		ui.Image->clear();
+		m_vecStrExistence.clear();
+		objectRecognition.clear();
+		QString m_qstr = QString("%1").arg(m_dInitialMinScore);
+		ui.minScorelineEdit->setText(m_qstr);
+		m_qstr = QString("%1").arg(m_dInitialMaxLap);
+		ui.maxOverLaplineEdit->setText(m_qstr);
+		m_qstr.clear();
+	}
+
+}
+
+void MutilObjetctRecognitionBasedOnQt::on_screenShootButton_clicked()
+{
+	if (m_bCap == true)
+	{
+		++m_iCurrentImgId;
+		m_matImg.copyTo(m_matCurrentImg);
+		m_currentTime = time(0);
+		strftime(m_charCurrentTime, sizeof(m_charCurrentTime), "%Y-%m-%d %X %A ", localtime(&m_currentTime));
+		putText(m_matCurrentImg, m_charCurrentTime, Point(10, 20), 1, 0.6, Scalar(0, 0, 255), 1, 8);
+
+		m_tmpQImg = Mat2QImage(m_matCurrentImg);
+		ui.Image->setPixmap(QPixmap::fromImage(m_tmpQImg));  // 将图片显示到label上 
+
+		sprintf(m_charDstImgName, m_strDstImg, m_iCurrentImgId);
+		imwrite(m_charDstImgName, m_matCurrentImg);
+	}
+}
 
 void MutilObjetctRecognitionBasedOnQt::on_loadModelButton_clicked()
 {
@@ -165,7 +207,9 @@ void MutilObjetctRecognitionBasedOnQt::on_loadButton_clicked()
 	}
 	if (m_bNameExistence == false && !m_matSrcImg.empty())
 	{
+		m_vecStrExistence.clear();
 		m_vecStrExistence.push_back(m_strImgName);
+		cv::resize(m_matSrcImg, m_matSrcImg, m_Size);
 		m_srcQImg = Mat2QImage(m_matSrcImg);
 		ui.Image->setPixmap(QPixmap::fromImage(m_srcQImg));  // 将图片显示到label上 
 
@@ -181,36 +225,6 @@ void MutilObjetctRecognitionBasedOnQt::on_loadButton_clicked()
 
 
 
-void MutilObjetctRecognitionBasedOnQt::on_clearButton_clicked()
-{
-	if(m_bCap == true)
-	{
-		ui.Image->clear();
-		m_vecStrExistence.clear();
-		objectRecognition.clear();
-		QString m_qstr = QString("%1").arg(m_dInitialMinScore);
-		ui.minScorelineEdit->setText(m_qstr);
-		m_qstr = QString("%1").arg(m_dInitialMinScore);
-		ui.maxOverLaplineEdit->setText(m_qstr);
-		m_qstr.clear();
-	}
-	
-}
-
-void MutilObjetctRecognitionBasedOnQt::on_screenShootButton_clicked()
-{
-	++m_iCurrentImgId;
-	m_matImg.copyTo(m_matCurrentImg);
-	m_currentTime = time(0);
-	strftime(m_charCurrentTime, sizeof(m_charCurrentTime), "%Y-%m-%d %X %A ", localtime(&m_currentTime));
-	putText(m_matCurrentImg, m_charCurrentTime, Point(10,20), 1, 0.6, Scalar(0,0,255), 1, 8);
-
-	m_tmpQImg = Mat2QImage(m_matCurrentImg);
-	ui.Image->setPixmap(QPixmap::fromImage(m_tmpQImg));  // 将图片显示到label上 
-	sprintf(m_charDstImgName, m_strDstImg, m_iCurrentImgId);
-	imwrite(m_charDstImgName, m_matCurrentImg);
-	
-}
 
 void MutilObjetctRecognitionBasedOnQt::mousePressEvent(QMouseEvent *e)
 {
@@ -290,8 +304,6 @@ void MutilObjetctRecognitionBasedOnQt::mouseReleaseEvent(QMouseEvent *e)
 		double m_AreaSum = m_icurrentRoi_Width*m_icurrentRoi_Height;
 		if (m_icurrentRoi_Width > 0 && m_icurrentRoi_Height > 0 && m_AreaSum > 10 &&m_AreaSum<50000 )
 		{
-
-			
 			sprintf(m_charDstImgName, m_strDstImg, m_iCurrentImgId);
 			objectRecognition.upDateNewData(m_charDstImgName, m_icurrentRoi_X, m_icurrentRoi_Y, m_icurrentRoi_Width, m_icurrentRoi_Height, m_iCurrentImgId);
 			
@@ -406,11 +418,23 @@ void MutilObjetctRecognitionBasedOnQt::initialize()
 	}
 	QString m_qstr;
 	m_dInitialMinScore = objectRecognition.minScore();
+
+	if (m_dInitialMinScore > 1 || m_dInitialMinScore < 0.001)
+	{
+		m_dInitialMinScore = 0.95;
+	}
 	m_qstr = QString("%1").arg(m_dInitialMinScore);
 	ui.minScorelineEdit->setText(m_qstr);
+	m_qstr.clear();
+
 	m_dInitialMaxLap = objectRecognition.maxOverLap();
+	if (m_dInitialMaxLap > 1 || m_dInitialMaxLap < 0.001)
+	{
+		m_dInitialMaxLap = 0.15;
+	}
 	m_qstr = QString("%1").arg(m_dInitialMaxLap);
 	ui.maxOverLaplineEdit->setText(m_qstr);
+	m_qstr.clear();
 
 	m_qTimer->start(100);
 	m_vecStrExistence.clear();
@@ -424,7 +448,7 @@ void MutilObjetctRecognitionBasedOnQt::on_minScoreOkButton_clicked()
 	QString 	m_qStr;
 	m_qStr = ui.minScorelineEdit->text();
 	double m_dMinScore = m_qStr.toDouble();
-	if (m_dMinScore > 1 || m_dMinScore < 0)
+	if (m_dMinScore > 1 || m_dMinScore < 0.001)
 	{
 		m_dMinScore = 0.95;
 	}
@@ -439,7 +463,7 @@ void MutilObjetctRecognitionBasedOnQt::on_maxOverLapOkButton_clicked()
 	QString 	m_qstr;
 	m_qstr = ui.maxOverLaplineEdit->text();
 	double m_dMaxOverLap = m_qstr.toDouble();
-	if (m_dMaxOverLap > 1 || m_dMaxOverLap < 0)
+	if (m_dMaxOverLap > 1 || m_dMaxOverLap < 0.001)
 	{
 		m_dMaxOverLap = 0.15;
 	}

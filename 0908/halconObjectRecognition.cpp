@@ -22,7 +22,6 @@ void   halconObjectRecognition::initialize()
 	getFiles   getAllFiles;
 	getAllFiles.getSpecialTypeFiles(m_strCurrentPosition, m_vecStrModelName, ".shm");
 	
-
 	if (m_vecStrModelName.size() > 0)
 	{
 		stringReplace stringReplace;
@@ -138,25 +137,7 @@ void halconObjectRecognition::clear()
 	m_dMaxOverLap = 0.15;
 }
 
-double halconObjectRecognition::minScore()
-{
-	return m_dMinScore;
-}
 
-void halconObjectRecognition::updateMinScore(double m_updateMinScore)
-{
-	m_dMinScore = m_updateMinScore;
-}
-
-double halconObjectRecognition::maxOverLap()
-{
-	return  m_dMaxOverLap;
-}
-
-void halconObjectRecognition::updateMaxOverLap(double m_updateMaxOverLap)
-{
-	m_dMaxOverLap = m_updateMaxOverLap;
-}
 
 bool halconObjectRecognition::loadModel(string m_strModelPath)
 {
@@ -174,7 +155,7 @@ bool halconObjectRecognition::loadModel(string m_strModelPath)
 	ReadShapeModel(m_charfileName, &hv_ModelID);
 	hv_vecModelID.push_back(hv_ModelID);
 
-	//m_strModelPath.clear();
+	m_strModelPath.clear();
 	int m_iSecondSize = hv_vecModelID.size();
 	if (m_iSecondSize > m_iFirstSize)
 	{
@@ -205,7 +186,6 @@ bool halconObjectRecognition::removdeModel(string m_strModelPath)
 		{
 			++it;
 			++id;
-			//++ho_obID;
 		}
 	}
 	
@@ -300,4 +280,23 @@ std::vector<std::string> halconObjectRecognition::updateModel()
 	return m_vecStrModelName;
 }
 
+double halconObjectRecognition::minScore()
+{
+	return m_dMinScore;
+}
+
+void halconObjectRecognition::updateMinScore(double m_updateMinScore)
+{
+	m_dMinScore = m_updateMinScore;
+}
+
+double halconObjectRecognition::maxOverLap()
+{
+	return  m_dMaxOverLap;
+}
+
+void halconObjectRecognition::updateMaxOverLap(double m_updateMaxOverLap)
+{
+	m_dMaxOverLap = m_updateMaxOverLap;
+}
 

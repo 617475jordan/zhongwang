@@ -31,7 +31,6 @@ private:
 	matHalcon                  matToHalcon;
 	Mat                        m_matImg,m_matTmpImg;
 	Mat                        m_matSrcImg;
-	Mat                        roi;//ROIÍ¼Ïñ
 	Mat                        m_matCurrentImg;
 
 	vector<string>             m_vecStrExistence;
@@ -44,16 +43,15 @@ private:
 	char                       m_charDstImgName[m_len];
 	char                       m_charRemove[m_len];
 	char                       m_charCurrentTime[m_len];
-	bool                       m_bDrawing;
+
 	int                        m_icurrentRoi_X, m_icurrentRoi_Y, m_icurrentRoi_Width, m_icurrentRoi_Height;
 	int                        m_iCurrentImgId = 0;
 	int                        m_iPoint_X;
 	int                        m_iPoint_Y;
-	
 	int                        m_iMinArea = 0;
 	int                        m_iMaxArea = 0;
 	int                        m_iSingleStep = 100;
-	bool                       m_bCap=false;
+	bool                       m_bCap = false, m_bDrawing=false;
 	QTextCodec                 *codec = QTextCodec::codecForName("GB18030");
 	
 	double                     m_dInitialMinScore,m_dInitialMaxLap,m_dCurrentFps=0;
@@ -62,14 +60,12 @@ private:
 	time_t                     m_currentTime;
 	
 	remapImage                 remapMatImage;
-	FileStorage                m_fileStorage;
 	imageEnhancement           ImageEnhancement;
 	string                     m_strFileStorage = "..//data//data.xml";
 	Size                       m_Size = Size(360, 270);
+	FileStorage                m_fileStorage;
 
-
-#define m_strDstImg            "..\\src\\%d.jpg"
-#define m_strSrcImg	           "..\\src\\current.jpg"
+#define m_strDstImg            "image\\%d.jpg"
 
 private slots:
 void runDemo();
