@@ -8,12 +8,12 @@
 using namespace cv;
 using namespace std;
 
-class imageEnhancement
+class imageEnhancing
 {
 public:
-	Mat SimplestCB(Mat& in, float percent);
+	Mat auto_White_Balance(Mat& in, float percent);
 	Mat equalizehist(Mat&src);
-	imageEnhancement();
-	~imageEnhancement();
+	imageEnhancing();
+	~imageEnhancing();
 };
 #endif

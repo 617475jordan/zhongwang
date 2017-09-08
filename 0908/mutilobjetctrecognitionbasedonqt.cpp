@@ -6,6 +6,7 @@ MutilObjetctRecognitionBasedOnQt::MutilObjetctRecognitionBasedOnQt(QWidget *pare
 	ui.setupUi(this); 
 	ui.minScorelineEdit->setText("0");
 	ui.maxOverLaplineEdit->setText("0");
+	initialize();
 	objectRecognition.initialize();
 
 	m_qTimer = new QTimer(this);
@@ -31,11 +32,9 @@ void MutilObjetctRecognitionBasedOnQt::runDemo()
 	cvtColor(m_matImg, m_matImg, CV_GRAY2RGB);
 	cv::resize(m_matImg, m_matImg, m_Size);
 	GaussianBlur(m_matImg, m_matImg, Size(3, 3), 0);
-	flip(m_matImg, m_matImg, -1);
-	m_matImg = ImageEnhancement.SimplestCB(m_matImg, 1);
+	m_matImg=imageEnhancement(m_matImg);
+	m_matImg = imageTransform(m_matImg);
 	m_matImg = objectRecognition.run(matToHalcon.IplImageToHImage(m_matImg), m_matImg);
-	
-	//m_capture >> m_matImg;
 	m_capQImg = Mat2QImage(m_matImg);
 	ui.Cap->setPixmap(QPixmap::fromImage(m_capQImg));  // 将图片显示到label上  
 	m_dCurrentFps = clock() - m_dCurrentFps;
@@ -67,12 +66,16 @@ void MutilObjetctRecognitionBasedOnQt::on_openButton_clicked()
 			cv::resize(m_matImg, m_matImg, m_Size);
 			m_iPoint_X = m_matImg.cols;
 			m_iPoint_Y = m_matImg.rows;
-			flip(m_matImg, m_matImg, -1);
+			m_matImg = imageEnhancement(m_matImg);
+			m_matImg = imageTransform(m_matImg);
 			GaussianBlur(m_matImg, m_matImg, Size(3, 3), 0);
-			m_matImg = ImageEnhancement.SimplestCB(m_matImg, 1);
 			m_capQImg = Mat2QImage(m_matImg);
 			ui.Cap->setPixmap(QPixmap::fromImage(m_capQImg));  // 将图片显示到label上 
-			initialize();
+
+			m_qTimer->start(100);
+			m_bDrawing = false;
+			m_bCap = true;
+			/*initialize();*/
 			
 		}
 		m_bCap = true;
@@ -435,12 +438,21 @@ void MutilObjetctRecognitionBasedOnQt::initialize()
 	m_qstr = QString("%1").arg(m_dInitialMaxLap);
 	ui.maxOverLaplineEdit->setText(m_qstr);
 	m_qstr.clear();
-
-	m_qTimer->start(100);
 	m_vecStrExistence.clear();
-	m_bDrawing = false;
-	m_bCap = true;
+	
 
+	ui.imageEnhanceComboBox->addItem("Orignial");
+	ui.imageEnhanceComboBox->addItem("Histogram");
+	ui.imageEnhanceComboBox->addItem("Laplace");
+	ui.imageEnhanceComboBox->addItem("Log");
+	ui.imageEnhanceComboBox->addItem("Gamma");
+	ui.imageEnhanceComboBox->addItem("Auto_White_Balance");
+
+	ui.transformComboBox->addItem("Orignial");
+	ui.transformComboBox->addItem("RightToLeft");
+	ui.transformComboBox->addItem("AboveToBelow");
+	ui.transformComboBox->addItem("Other");
+	
 }
 
 void MutilObjetctRecognitionBasedOnQt::on_minScoreOkButton_clicked()
@@ -473,3 +485,116 @@ void MutilObjetctRecognitionBasedOnQt::on_maxOverLapOkButton_clicked()
 	objectRecognition.updateMaxOverLap(m_dMaxOverLap);
 	m_qstr.clear();
 }
+cv::Mat MutilObjetctRecognitionBasedOnQt::imageEnhancement(Mat m_mat)
+{
+	QString m_qstr = ui.imageEnhanceComboBox->currentText();
+	String m_strCurrent = m_qstr.toStdString();
+	if (m_strCurrent == "Orignial")
+	{
+		m_strCurrent.clear();
+		return m_mat;
+	}
+	else if (m_strCurrent == "Histogram")
+	{
+		Mat m_matHistogram[3];
+		split(m_mat, m_matHistogram);
+		for (int i = 0; i < 3; i++)
+		{
+			equalizeHist(m_matHistogram[i], m_matHistogram[i]);
+		}
+		merge(m_matHistogram, 3, m_mat);
+		m_strCurrent.clear();
+		return m_mat;
+	}
+	else if (m_strCurrent=="Laplace")
+	{
+		Mat m_matLaplace;
+		Mat kernel = (Mat_<float>(3, 3) << 0, -1, 0, 0, 5, 0, 0, -1, 0);
+		filter2D(m_mat, m_matLaplace, CV_8UC3, kernel);
+		m_strCurrent.clear();
+		return m_matLaplace;
+	}
+	else if (m_strCurrent == "Log")
+	{
+		Mat m_matLog(m_mat.size(), CV_32FC3);
+		for (int i = 0; i < m_mat.rows; i++)
+		{
+			for (int j = 0; j < m_mat.cols; j++)
+			{
+				m_matLog.at<Vec3f>(i, j)[0] = log(1 + m_mat.at<Vec3b>(i, j)[0]);
+				m_matLog.at<Vec3f>(i, j)[1] = log(1 + m_mat.at<Vec3b>(i, j)[1]);
+				m_matLog.at<Vec3f>(i, j)[2] = log(1 + m_mat.at<Vec3b>(i, j)[2]);
+			}
+		}
+		//归一化到0~255    
+		normalize(m_matLog, m_matLog, 0, 255, CV_MINMAX);
+		//转换成8bit图像显示    
+		convertScaleAbs(m_matLog, m_matLog);
+		m_strCurrent.clear();
+		return m_matLog;
+
+	}
+	else if (m_strCurrent == "Gamma")
+	{
+		Mat m_matGamma(m_mat.size(), CV_32FC3);
+		for (int i = 0; i < m_mat.rows; i++)
+		{
+			for (int j = 0; j < m_mat.cols; j++)
+			{
+				m_matGamma.at<Vec3f>(i, j)[0] = (m_mat.at<Vec3b>(i, j)[0])*(m_mat.at<Vec3b>(i, j)[0])*(m_mat.at<Vec3b>(i, j)[0]);
+				m_matGamma.at<Vec3f>(i, j)[1] = (m_mat.at<Vec3b>(i, j)[1])*(m_mat.at<Vec3b>(i, j)[1])*(m_mat.at<Vec3b>(i, j)[1]);
+				m_matGamma.at<Vec3f>(i, j)[2] = (m_mat.at<Vec3b>(i, j)[2])*(m_mat.at<Vec3b>(i, j)[2])*(m_mat.at<Vec3b>(i, j)[2]);
+			}
+		}
+		//归一化到0~255    
+		normalize(m_matGamma, m_matGamma, 0, 255, CV_MINMAX);
+		//转换成8bit图像显示    
+		convertScaleAbs(m_matGamma, m_matGamma);
+		m_strCurrent.clear();
+		return m_matGamma;
+
+	}
+	else if (m_strCurrent == "Auto_White_Balance")
+	{
+		imageEnhancing imageEnhancing;
+		m_mat = imageEnhancing.auto_White_Balance(m_mat, 1);
+		m_strCurrent.clear();
+		return m_mat;
+	}
+	else
+	{
+		m_strCurrent.clear();
+		return m_mat;
+	}
+}
+
+cv::Mat MutilObjetctRecognitionBasedOnQt::imageTransform(Mat m_mat)
+{
+	QString m_qstr = ui.transformComboBox->currentText();
+	String m_strCurrent = m_qstr.toStdString();
+	if(m_strCurrent == "Orignial")
+	{
+		m_qstr.clear();
+		return m_mat;
+	}
+	else if (m_strCurrent == "RightToLeft")
+	{
+		remapImage remapImage;
+		m_mat = remapImage.imageRemap(m_mat);
+	}
+	else  if (m_strCurrent == "AboveToBelow")
+	{
+		flip(m_mat, m_mat, -1);
+	}
+	else if (m_strCurrent == "Other")
+	{
+		remapImage remapImage;
+		m_mat = remapImage.imageRemap(m_mat);
+		flip(m_mat, m_mat, -1);
+	}
+	m_qstr.clear();
+	return m_mat;
+	
+}
+
+

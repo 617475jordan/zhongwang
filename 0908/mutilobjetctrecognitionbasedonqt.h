@@ -22,6 +22,9 @@ private:
 	QImage                     Mat2QImage(cv::Mat cvImg);
 	bool                       mousePosition();
 	void                       initialize();
+	Mat                        imageEnhancement(Mat m_mat);
+	Mat                        imageTransform(Mat m_mat);
+
 private:
 
 	QTimer                     *m_qTimer,*m_qCurrentTimer;
@@ -60,7 +63,6 @@ private:
 	time_t                     m_currentTime;
 	
 	remapImage                 remapMatImage;
-	imageEnhancement           ImageEnhancement;
 	string                     m_strFileStorage = "..//data//data.xml";
 	Size                       m_Size = Size(360, 270);
 	FileStorage                m_fileStorage;

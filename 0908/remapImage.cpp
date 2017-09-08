@@ -19,7 +19,7 @@ remapImage::~remapImage()
 /// <returns>	A Mat. </returns>
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Mat remapImage::Photo_Remap(Mat remap_image)
+Mat remapImage::imageRemap(Mat remap_image)
 {
 	Mat map_x, map_y;
 	int i, j;

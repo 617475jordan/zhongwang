@@ -1,16 +1,16 @@
 #include "ImageEnhancement.h"
 
-imageEnhancement::imageEnhancement()
+imageEnhancing::imageEnhancing()
 {
 
 }
-imageEnhancement::~imageEnhancement()
+imageEnhancing::~imageEnhancing()
 {
 
 }
 /// perform the Simplest Color Balancing algorithm
 /**********OpenCV_Auto_White_Balance*************/
-Mat imageEnhancement::SimplestCB(Mat& in,  float percent)
+Mat imageEnhancing::auto_White_Balance(Mat& in,  float percent)
 {
 	Mat out;
 	
@@ -41,7 +41,7 @@ Mat imageEnhancement::SimplestCB(Mat& in,  float percent)
 	return out;
 }
 
-Mat imageEnhancement::equalizehist(Mat&src)
+Mat imageEnhancing::equalizehist(Mat&src)
 {
 	Mat imageRGB[3];
 	split(src, imageRGB);

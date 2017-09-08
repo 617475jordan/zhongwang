@@ -6,5 +6,5 @@ class remapImage
 public:
 	remapImage();
 	~remapImage();
-	Mat Photo_Remap(Mat remap_image);
+	Mat imageRemap(Mat remap_image);
 };
